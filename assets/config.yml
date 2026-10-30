@@ -4,10 +4,14 @@ server:
   # tls:
   #   cert_file: /etc/vigie/vigie.crt
   #   key_file: /etc/vigie/vigie.key
+  # with basic_auth, every endpoint but /healthz asks for one of its users; set tls too, basic auth sends passwords in clear
+  # basic_auth:
+  #   - username: flock
+  #     password: change-me
 log:
   level: info
   in_json: false
-# POST /reload has no authentication, reload with SIGHUP instead when other hosts reach the server
+# without server.basic_auth, POST /reload has no authentication, so reload with SIGHUP when other hosts reach the server
 disable_reload_by_request: false
 # how long the answer of a source is reused, 0s reads it on every request; a service can set its own cache_ttl
 cache:

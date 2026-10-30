@@ -85,6 +85,9 @@ func (a *App) Handler() (http.Handler, func() error, error) {
 			_, _ = w.Write([]byte("services reloaded"))
 		})
 	}
+	if len(a.cnf.ServerConfig.BasicAuth) > 0 {
+		return requireBasicAuth(a.cnf.ServerConfig.BasicAuth, mux), reload, nil
+	}
 	return mux, reload, nil
 }
 

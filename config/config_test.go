@@ -42,7 +42,17 @@ var _ = Describe("Config", func() {
 		Entry("negative global cache ttl", "cache: {ttl: -1s}\nservices:\n- name: web\n  file: {path: x}\n", "cache ttl is negative"),
 		Entry("negative service cache ttl", "services:\n- name: web\n  cache_ttl: -1s\n  file: {path: x}\n", "service web cache_ttl is negative"),
 		Entry("tls without key", "server: {tls: {cert_file: a.pem}}\nservices:\n- name: web\n  file: {path: x}\n", "cert_file and key_file are required"),
+		Entry("basic auth user without password", "server: {basic_auth: [{username: flock}]}\nservices:\n- name: web\n  file: {path: x}\n", "server basic_auth: username and password are required"),
+		Entry("basic auth user without username", "server: {basic_auth: [{password: secret}]}\nservices:\n- name: web\n  file: {path: x}\n", "server basic_auth: username and password are required"),
+		Entry("basic auth user twice", "server: {basic_auth: [{username: flock, password: a}, {username: flock, password: b}]}\nservices:\n- name: web\n  file: {path: x}\n", "server basic_auth: username flock is given twice"),
 	)
+
+	It("should read the users of the basic authentication of the server", func() {
+		cnf, err := ReadConfig(write("server: {basic_auth: [{username: flock, password: secret}]}\nservices:\n- name: web\n  file: {path: x}\n"))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cnf.ServerConfig.BasicAuth).To(Equal([]BasicAuthUser{{Username: "flock", Password: "secret"}}))
+	})
 
 	It("should cache every service for 5 seconds by default", func() {
 		cnf, err := ReadConfig(write("services:\n- name: web\n  file: {path: x}\n"))

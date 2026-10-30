@@ -30,7 +30,7 @@ $ curl -s 'http://localhost:8080/services?service_name=web'
 ]
 ```
 
-The server also serves a page at `/` listing the services with the endpoints each one gives when the page loads, and `GET /healthz` for probes. `POST /reload` or `SIGHUP` reloads the services of the file.
+The server also serves a page at `/` listing the services with the endpoints each one gives when the page loads, and `GET /healthz` for probes. `POST /reload` or `SIGHUP` reloads the services of the file. With `server.basic_auth`, every endpoint but `/healthz` asks for the username and password of one of its users.
 
 ## Run it in a container
 

@@ -6,7 +6,12 @@ for (const cell of document.querySelectorAll('td.endpoints')) {
 async function resolve(cell) {
   const service = cell.dataset.service;
   try {
-    const resp = await fetch('services?service_name=' + encodeURIComponent(service));
+    // a page opened as http://user:password@host/ hands its credentials to relative URLs, which fetch refuses; the
+    // browser keeps sending them for this origin anyway
+    const url = new URL('services?service_name=' + encodeURIComponent(service), location.href);
+    url.username = '';
+    url.password = '';
+    const resp = await fetch(url);
     if (!resp.ok) {
       show(cell, 'error', (await resp.text()).trim());
       return;

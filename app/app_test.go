@@ -126,6 +126,55 @@ var _ = Describe("App", func() {
 		Expect(body).To(ContainSubstring(`"ip": "10.0.0.1"`))
 	})
 
+	Context("with basic authentication", func() {
+		var server *httptest.Server
+
+		BeforeEach(func() {
+			server = serve(configOf(writeFile("web.txt", "10.0.0.1\n"), "server: {basic_auth: [{username: flock, password: secret}, {username: meridian, password: other}]}\n"))
+		})
+
+		send := func(method, path, username, password string) *http.Response {
+			req, err := http.NewRequest(method, server.URL+path, nil)
+			Expect(err).ToNot(HaveOccurred())
+			if username != "" {
+				req.SetBasicAuth(username, password)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).ToNot(HaveOccurred())
+			resp.Body.Close()
+			return resp
+		}
+
+		It("asks a request without credentials to authenticate", func() {
+			resp := send(http.MethodGet, "/services?service_name=web", "", "")
+
+			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
+			Expect(resp.Header.Get("WWW-Authenticate")).To(Equal(`Basic realm="vigie", charset="UTF-8"`))
+		})
+
+		It("refuses a wrong password, and a password of another user", func() {
+			Expect(send(http.MethodGet, "/services?service_name=web", "flock", "wrong").StatusCode).To(Equal(http.StatusUnauthorized))
+			Expect(send(http.MethodGet, "/services?service_name=web", "flock", "other").StatusCode).To(Equal(http.StatusUnauthorized))
+		})
+
+		It("serves every user its endpoints, the page and the reload", func() {
+			Expect(send(http.MethodGet, "/services?service_name=web", "flock", "secret").StatusCode).To(Equal(http.StatusOK))
+			Expect(send(http.MethodGet, "/services?service_name=web", "meridian", "other").StatusCode).To(Equal(http.StatusOK))
+			Expect(send(http.MethodGet, "/", "flock", "secret").StatusCode).To(Equal(http.StatusOK))
+			Expect(send(http.MethodPost, "/reload", "flock", "secret").StatusCode).To(Equal(http.StatusOK))
+		})
+
+		It("protects the page and the reload", func() {
+			Expect(send(http.MethodGet, "/", "", "").StatusCode).To(Equal(http.StatusUnauthorized))
+			Expect(send(http.MethodGet, "/brand/lockup.svg", "", "").StatusCode).To(Equal(http.StatusUnauthorized))
+			Expect(send(http.MethodPost, "/reload", "", "").StatusCode).To(Equal(http.StatusUnauthorized))
+		})
+
+		It("leaves the health check open for the probes", func() {
+			Expect(send(http.MethodGet, "/healthz", "", "").StatusCode).To(Equal(http.StatusOK))
+		})
+	})
+
 	It("refuses reload by request when disabled", func() {
 		server := serve(configOf(writeFile("web.txt", "10.0.0.1\n"), "disable_reload_by_request: true\n"))
 
