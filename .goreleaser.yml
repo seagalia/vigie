@@ -1,0 +1,50 @@
+version: 2
+
+project_name: vigie
+
+builds:
+  - id: vigie
+    main: ./
+    binary: vigie
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s
+      - -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: vigie
+    ids:
+      - vigie
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    wrap_in_directory: true
+    files:
+      - LICENSE*
+      - README*
+      - CHANGELOG*
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  github:
+    owner: seagalia
+    name: vigie
+  prerelease: auto
+  name_template: '{{ .Tag }}'

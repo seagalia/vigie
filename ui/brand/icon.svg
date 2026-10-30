@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   role="img"
+   aria-labelledby="title"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <title
+     id="title">VIGIE — icône petite taille</title>
+  <desc
+     id="desc1">Goéland turquoise aux ailes repliées, œil proche fermé, observant dans une longue-vue sur support gris fixé à un bollard.</desc>
+  <path
+     id="bollard-base"
+     d="M132 448 L139 493 Q221 512 300 493 L307 448 Z"
+     fill="#087E8B" />
+  <path
+     id="bollard-cap"
+     d="M119 429 Q220 412 320 429 L320 450 Q220 474 119 450 Z"
+     fill="#34BBC1" />
+  <g
+     id="vigie-perched"
+     transform="translate(-25 -22) scale(.74)">
+    <path
+       id="support-foot"
+       d="M431 602 L470 602 L470 621 Q450 626 431 621 Z"
+       fill="#465665" />
+    <path
+       id="support-post"
+       d="M437 610 L523 194 L543 198 L459 614 Z"
+       fill="#617181" />
+    <path
+       id="scope-cradle"
+       d="M516 190 Q530 203 549 186"
+       fill="none"
+       stroke="#465665"
+       stroke-width="15"
+       stroke-linecap="round" />
+    <path
+       id="vigie-feet"
+       d="M246 535 L234 591 Q212 592 207 604 Q206 613 236 607 Q255 624 268 619 L256 603 Q290 616 292 606 L254 590 L267 538 Z M339 535 L331 591 Q311 593 310 604 Q314 613 338 606 Q372 624 382 613 Q410 618 408 607 L352 591 L360 534 Z"
+       fill="#FF9C21" />
+    <path
+       id="vigie-tail"
+       d="M174 497 C153 520 128 537 111 551 Q102 561 126 561 L154 557 Q154 562 166 559 C195 556 218 541 237 525 Z"
+       fill="#E7EFF2" />
+    <path
+       id="vigie-far-wing"
+       d="M424 287 C465 316 491 359 495 395 C500 443 469 487 417 510 C445 463 441 410 424 369 Z"
+       fill="#087E8B" />
+    <path
+       id="vigie-far-wing-panel"
+       d="M429 302 C462 333 485 375 481 414 C478 437 467 452 457 464 C474 411 446 359 429 338 Z"
+       fill="#34BBC1" />
+    <path
+       id="vigie-body"
+       d="M354 122 C396 126 428 158 434 197 C439 224 428 249 426 267 C424 286 437 301 449 325 C471 368 480 418 456 470 C433 518 360 552 283 555 C233 558 189 547 157 524 C134 508 130 486 144 462 C167 423 197 381 204 347 C212 315 198 283 200 246 C199 204 214 171 242 146 C270 121 316 113 354 122 Z"
+       fill="#FFF9F0"
+       stroke="#E5DED3"
+       stroke-width="2.8"
+       stroke-linejoin="round" />
+    <path
+       id="vigie-blue-back"
+       d="M354 122 C294 112 247 143 222 191 C207 221 215 251 215 280 C222 318 215 341 195 359 L172 379 C204 340 209 326 204 296 C199 268 195 238 203 209 C220 151 273 107 326 115 Z"
+       fill="#34BBC1" />
+    <path
+       id="vigie-folded-wing-base"
+       d="M303 333 C268 319 230 337 202 359 C158 394 122 431 91 463 C83 473 74 482 70 490 Q62 503 83 508 C103 514 123 508 140 501 Q122 518 138 521 C172 531 207 521 239 499 C274 477 304 446 321 405 C333 373 336 345 303 333 Z"
+       fill="#087E8B" />
+    <path
+       id="vigie-folded-wing"
+       d="M303 333 C268 319 230 337 202 359 C158 394 122 431 94 444 Q88 453 104 451 Q142 437 176 406 C150 439 128 455 133 466 C142 480 184 463 214 444 Q184 480 191 489 C207 503 250 472 271 449 C307 411 329 372 326 356 Q322 339 303 333 Z"
+       fill="#34BBC1" />
+    <path
+       id="vigie-crest-upper"
+       d="M354 122 C335 100 322 81 288 72 C270 66 249 67 237 72 Q230 75 237 80 C267 98 317 103 354 122 Z"
+       fill="#34BBC1" />
+    <path
+       id="vigie-crest-lower"
+       d="M354 122 C318 101 286 95 253 105 C231 111 213 124 203 134 Q197 143 210 139 C258 124 306 116 354 122 Z"
+       fill="#087E8B" />
+    <path
+       id="closed-near-eye"
+       d="M269 225 C275 202 301 197 317 218"
+       fill="none"
+       stroke="#0B2F55"
+       stroke-width="11"
+       stroke-linecap="round" />
+    <ellipse
+       id="vigie-far-eye"
+       cx="403"
+       cy="183"
+       rx="13"
+       ry="23"
+       transform="rotate(-18 403 183)"
+       fill="#0B2F55" />
+    <path
+       id="vigie-beak"
+       d="M356 229 C373 225 370 203 384 197 C405 189 447 195 461 205 Q469 211 470 216 C447 213 431 220 416 229 C396 241 383 253 369 246 Q358 240 354 235 Q352 232 356 229 Z"
+       fill="#FF9C21" />
+    <path
+       id="vigie-beak-smile"
+       d="M355 233 C381 246 416 220 446 216 Q460 214 470 216 C444 219 427 230 408 239 C385 254 371 253 355 233 Z"
+       fill="#E6861D" />
+    <g
+       id="telescope"
+       transform="rotate(-8 410 183)">
+      <path
+         id="ocular"
+         d="M410 174 Q406 183 410 192 L438 192 L438 174 Z"
+         fill="#087E8B" />
+      <path
+         id="draw-tube"
+         d="M432 171 L490 168 L490 198 L432 195 Z"
+         fill="#FF9C21" />
+      <path
+         id="barrel"
+         d="M480 161 L635 154 L635 212 L480 205 Z"
+         fill="#34BBC1" />
+      <path
+         id="rim"
+         d="M626 154 Q638 150 646 158 L646 208 Q638 217 626 213 Z"
+         fill="#FF9C21" />
+      <ellipse
+         id="lens"
+         cx="644"
+         cy="183"
+         rx="11"
+         ry="25"
+         fill="#087E8B" />
+    </g>
+  </g>
+</svg>

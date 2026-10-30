@@ -1,0 +1,19 @@
+# never committed
+/vendor/
+.crap/
+.idea/
+.DS_Store
+.superpowers/
+.claude/
+.envrc
+
+# local data and builds
+/vigie
+/dist/
+/config*.yml
+
+# key material
+*.crt
+*.key
+*.pem
+*.test

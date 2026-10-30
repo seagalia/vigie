@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>vigie</title>
+  <link rel="icon" type="image/svg+xml" href="brand/icon.svg">
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="page.js" defer></script>
+</head>
+<body>
+  <header>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="brand/lockup-dark.svg">
+      <img class="lockup" src="brand/lockup.svg" alt="vigie">
+    </picture>
+    <p class="tagline">Endpoint discovery server</p>
+  </header>
+  <main>
+    <h1>Services</h1>
+    <p class="hint">Each service answers on <code>GET /services?service_name=&lt;name&gt;</code>. Endpoints are resolved when the page loads.</p>
+    <table>
+      <thead>
+        <tr><th>Service</th><th>Source</th><th>Default port</th><th>Endpoints</th></tr>
+      </thead>
+      <tbody>
+        {{- range .Rows}}
+        <tr>
+          <td class="name"><a href="services?service_name={{.Name}}">{{.Name}}</a></td>
+          <td><span class="kind">{{.Kind}}</span> <code>{{.Source}}</code></td>
+          <td>{{.DefaultPort}}</td>
+          <td class="endpoints" data-service="{{.Name}}"><span class="pending">resolving…</span></td>
+        </tr>
+        {{- end}}
+      </tbody>
+    </table>
+  </main>
+  <footer>vigie {{.Version}}</footer>
+</body>
+</html>

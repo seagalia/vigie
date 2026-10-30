@@ -1,0 +1,47 @@
+# Sample vigie configuration, reference in docs/configuration.md
+server:
+  listen_addr: :8080
+  # tls:
+  #   cert_file: /etc/vigie/vigie.crt
+  #   key_file: /etc/vigie/vigie.key
+log:
+  level: info
+  in_json: false
+# POST /reload has no authentication, reload with SIGHUP instead when other hosts reach the server
+disable_reload_by_request: false
+# how long the answer of a source is reused, 0s reads it on every request; a service can set its own cache_ttl
+cache:
+  ttl: 5s
+services:
+  # asked by a request without service_name
+  - name: default
+    default_port: 8080
+    file:
+      path: /etc/vigie/endpoints.txt
+  - name: api
+    default_port: 8080
+    dns:
+      name: api.example.com
+      type: SRV
+      srv_service: http
+      srv_proto: tcp
+  # the instances of the Consul service "payments", asked to the local Consul agent over tcp
+  - name: payments
+    default_port: 8080
+    dns:
+      name: service.consul
+      type: SRV
+      srv_service: payments
+      srv_proto: tcp
+      resolver: 127.0.0.1:8600
+  # the ready pods of the Service shop/web, read with the service account of the pod or ~/.kube/config
+  # - name: web
+  #   default_port: 8080
+  #   kubernetes:
+  #     namespace: shop
+  #     service: web
+  #     port_name: http
+  - name: db
+    default_port: 5432
+    url:
+      url: https://inventory.example.com/db-endpoints.txt

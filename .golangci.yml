@@ -1,0 +1,25 @@
+version: "2"
+
+linters:
+  enable:
+    # reports zerolog events never sent with Msg/Send, which are silently dropped
+    - zerologlint
+  settings:
+    errcheck:
+      exclude-functions:
+        - io/ioutil.ReadFile
+        - io.WriteString
+        - (net/http.ResponseWriter).Write
+    staticcheck:
+      # same scope as golangci-lint v1, which did not run the stylecheck (ST) and quickfix (QF) checks by default
+      checks:
+        - all
+        - -ST*
+        - -QF*
+  exclusions:
+    # the default exclusions of golangci-lint v1
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling

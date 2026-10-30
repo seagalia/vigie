@@ -1,0 +1,18 @@
+[Unit]
+Description=vigie, endpoint discovery server
+Documentation=https://github.com/seagalia/vigie
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+DynamicUser=yes
+Environment="CONFIG_FILE=/etc/vigie/config.yml"
+ExecStart=/usr/local/bin/vigie serve --config-path ${CONFIG_FILE}
+# reloads the services of the file, the server keeps the previous ones when the file is invalid
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=2
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

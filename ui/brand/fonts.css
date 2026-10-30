@@ -1,0 +1,25 @@
+/* Titillium Web (SIL Open Font License, fonts/OFL.txt) from @fontsource/titillium-web, latin subset only. */
+
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('fonts/titillium-web-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('fonts/titillium-web-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('fonts/titillium-web-700.woff2') format('woff2');
+}
