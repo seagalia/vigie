@@ -115,6 +115,22 @@ var _ = Describe("Services", func() {
 				"  {\n    \"ip\": \"10.0.0.2\",\n    \"port\": 8081,\n    \"load_balancing_weight\": 5\n  }\n]\n"))
 		})
 
+		It("should answer a line that isn't valid utf-8, its invalid bytes replaced", func() {
+			var err error
+			handler, err = NewHandler([]*config.Service{
+				{Name: "web", DefaultPort: 80, File: &config.ServiceFile{Path: writeEndpoints("x\xff\xfey:8080\n")}},
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			resp := get("?service_name=web")
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			var ips []map[string]any
+			Expect(json.Unmarshal(resp.Body.Bytes(), &ips)).To(Succeed())
+			Expect(ips).To(HaveLen(1))
+			Expect(ips[0]["ip"]).To(Equal("x\uFFFDy"))
+		})
+
 		It("should write an empty list as []", func() {
 			var err error
 			handler, err = NewHandler([]*config.Service{

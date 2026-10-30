@@ -42,7 +42,8 @@ func urlToEndpoint(line string, defaultPort uint32) (*eds.Endpoint, error) {
 	}
 
 	return &eds.Endpoint{
-		Ip:                  host,
+		// protobuf strings must be valid utf-8, a byte that isn't would fail the whole answer instead of this endpoint
+		Ip:                  strings.ToValidUTF8(host, "\uFFFD"),
 		Port:                uint32(port),
 		LoadBalancingWeight: uint32(weight),
 	}, nil
