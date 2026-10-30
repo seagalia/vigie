@@ -4,7 +4,8 @@ server:
   # tls:
   #   cert_file: /etc/vigie/vigie.crt
   #   key_file: /etc/vigie/vigie.key
-  # with basic_auth, every endpoint but /healthz asks for one of its users; set tls too, basic auth sends passwords in clear
+  # with basic_auth, every endpoint but the health checks asks for one of its users; set tls too, basic auth sends
+  # passwords in clear
   # basic_auth:
   #   - username: flock
   #     password: change-me

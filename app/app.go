@@ -1,15 +1,22 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
+	"connectrpc.com/grpchealth/v2"
+	"connectrpc.com/grpcreflect/v2"
 	"github.com/rs/zerolog"
 	"github.com/seagalia/vigie/config"
 	"github.com/seagalia/vigie/logging"
+	"github.com/seagalia/vigie/sdk/vigie/eds/v1/edsconnect"
 	"github.com/seagalia/vigie/services"
 	"github.com/seagalia/vigie/ui"
 )
@@ -42,7 +49,8 @@ func (a *App) Config() *config.Config {
 	return a.cnf
 }
 
-// Handler routes the endpoints answer, the page and the reload; reload re-reads the config file into both.
+// Handler routes the endpoints answer, over GET /services and the EDS service, the page and the reload; reload
+// re-reads the config file into them.
 func (a *App) Handler() (http.Handler, func() error, error) {
 	handlerSvcs, err := services.NewHandler(a.cnf.Services)
 	if err != nil {
@@ -74,6 +82,11 @@ func (a *App) Handler() (http.Handler, func() error, error) {
 		_, _ = w.Write([]byte("ok"))
 	})
 	page.Mount(mux)
+	rpcServer := connect.NewServer(logCalls(logging.Component("eds")))
+	edsconnect.RegisterEndpointDiscoveryServiceHandler(rpcServer, handlerSvcs)
+	grpchealth.Register(rpcServer, grpchealth.NewStaticChecker())
+	grpcreflect.Register(rpcServer)
+	connecthttp.Mount(mux, rpcServer)
 	if !a.cnf.DisableReloadByRequest {
 		mux.HandleFunc("POST /reload", func(w http.ResponseWriter, r *http.Request) {
 			err := reload()
@@ -106,14 +119,47 @@ func (a *App) Run() error {
 		}
 	}()
 
-	if a.cnf.ServerConfig.Tls != nil {
-		a.entry.Info().Str("listen_addr", a.cnf.ServerConfig.ListenAddr).Msg("Listening with TLS")
-		return http.ListenAndServeTLS(a.cnf.ServerConfig.ListenAddr,
-			a.cnf.ServerConfig.Tls.CertFile,
-			a.cnf.ServerConfig.Tls.KeyFile,
-			handler)
+	withTLS := a.cnf.ServerConfig.Tls != nil
+	server := &http.Server{
+		Addr:      a.cnf.ServerConfig.ListenAddr,
+		Handler:   handler,
+		Protocols: serverProtocols(withTLS),
+	}
+	if withTLS {
+		a.entry.Info().Str("listen_addr", server.Addr).Msg("Listening with TLS")
+		return server.ListenAndServeTLS(a.cnf.ServerConfig.Tls.CertFile, a.cnf.ServerConfig.Tls.KeyFile)
 	}
 
-	a.entry.Info().Str("listen_addr", a.cnf.ServerConfig.ListenAddr).Msg("Listening")
-	return http.ListenAndServe(a.cnf.ServerConfig.ListenAddr, handler)
+	a.entry.Info().Str("listen_addr", server.Addr).Msg("Listening")
+	return server.ListenAndServe()
+}
+
+func logCalls(entry zerolog.Logger) connect.ServerInterceptor {
+	return func(next connect.ServerFunc) connect.ServerFunc {
+		return func(ctx context.Context, spec connect.Spec, stream connect.ServerStream) error {
+			start := time.Now()
+			err := next(ctx, spec, stream)
+			duration := time.Since(start)
+			if err != nil {
+				entry.Warn().Err(err).
+					Str("procedure", spec.Procedure).
+					Stringer("code", connect.CodeOf(err)).
+					Dur("duration", duration).
+					Msg("Call failed")
+				return err
+			}
+			entry.Debug().Str("procedure", spec.Procedure).Dur("duration", duration).Msg("Call served")
+			return nil
+		}
+	}
+}
+
+// serverProtocols adds unencrypted HTTP/2 (h2c) to HTTP/1 and HTTP/2 without TLS only, so a gRPC client reaches
+// Vigie without server.tls while a server with TLS keeps every request encrypted
+func serverProtocols(withTLS bool) *http.Protocols {
+	protocols := &http.Protocols{}
+	protocols.SetHTTP1(true)
+	protocols.SetHTTP2(true)
+	protocols.SetUnencryptedHTTP2(!withTLS)
+	return protocols
 }

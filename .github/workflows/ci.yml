@@ -20,6 +20,30 @@ jobs:
         with:
           version: v2.15.0
 
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: bufbuild/buf-action@v1
+        with:
+          version: 1.74.0
+          setup_only: true
+          # optional, unauthenticated calls to buf.build are rate limited
+          token: ${{ secrets.BUF_TOKEN }}
+      - name: api lint
+        run: make api-lint
+      - name: generated code is up to date
+        run: |
+          make generate
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "run make generate and commit the result, out of date files:"
+            git status --porcelain
+            exit 1
+          fi
+
   test:
     runs-on: ubuntu-latest
     steps:

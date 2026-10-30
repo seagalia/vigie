@@ -1,7 +1,6 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -58,28 +57,32 @@ func newSource(svcConfig *config.Service) (Service, error) {
 	return nil, fmt.Errorf("no source")
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	svc := r.URL.Query().Get("service_name")
-	if svc == "" {
-		svc = "default"
+// lookup finds a service of the loaded ones, the one named default for an empty name
+func (h *Handler) lookup(name string) (string, Service, bool) {
+	if name == "" {
+		name = "default"
 	}
-	s, ok := (*h.svcs.Load())[svc]
+	svc, ok := (*h.svcs.Load())[name]
+	return name, svc, ok
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	svc, s, ok := h.lookup(r.URL.Query().Get("service_name"))
 	if !ok {
 		http.Error(w, fmt.Sprintf("service %s not found", svc), http.StatusNotFound)
 		return
 	}
 
-	ipAddrs, err := s.Resolve()
+	endpoints, err := s.Resolve()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("resolve service %s failed: %s", svc, err), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	err = enc.Encode(ipAddrs)
+	body, err := marshalEndpointsJSON(endpoints)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("encode ip addrs for service %s failed: %s", svc, err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("encode endpoints of service %s failed: %s", svc, err), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(body)
 }

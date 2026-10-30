@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/seagalia/vigie/config"
+
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 )
 
 type File struct {
@@ -21,27 +23,27 @@ func NewFile(cnf *config.ServiceFile, defaultPort uint32) *File {
 	}
 }
 
-func (s *File) Resolve() ([]IpAddr, error) {
+func (s *File) Resolve() ([]*eds.Endpoint, error) {
 	f, err := os.Open(s.path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
-	ips := make([]IpAddr, 0)
+	endpoints := make([]*eds.Endpoint, 0)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		ipAddr, err := urlToIpAddr(line, s.defaultPort)
+		endpoint, err := urlToEndpoint(line, s.defaultPort)
 		if err != nil {
 			return nil, err
 		}
-		ips = append(ips, ipAddr)
+		endpoints = append(endpoints, endpoint)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("cannot scan file: %w", err)
 	}
-	return ips, nil
+	return endpoints, nil
 }

@@ -57,23 +57,23 @@ var _ = Describe("Consul through the dns source", Label("e2e"), Ordered, func() 
 		handler := consulHandler("tcp")
 
 		// Consul serves a registration once its catalog has it, a moment after the register call
-		Eventually(func() []services.IpAddr {
+		Eventually(func() []endpoint {
 			_, ips := getServices(handler, "api")
 			return ips
 		}).WithTimeout(30 * time.Second).Should(ConsistOf(
-			services.IpAddr{IP: "10.0.0.1", Port: 9000, LoadBalancingWeight: 1},
-			services.IpAddr{IP: "10.0.0.3", Port: 9001, LoadBalancingWeight: 5},
+			endpoint{IP: "10.0.0.1", Port: 9000, LoadBalancingWeight: 1},
+			endpoint{IP: "10.0.0.3", Port: 9001, LoadBalancingWeight: 5},
 		))
 	})
 
 	It("keeps the instances with the tag given in place of tcp", func() {
 		handler := consulHandler("primary")
 
-		Eventually(func() []services.IpAddr {
+		Eventually(func() []endpoint {
 			_, ips := getServices(handler, "api")
 			return ips
 		}).WithTimeout(30 * time.Second).Should(ConsistOf(
-			services.IpAddr{IP: "10.0.0.1", Port: 9000, LoadBalancingWeight: 1},
+			endpoint{IP: "10.0.0.1", Port: 9000, LoadBalancingWeight: 1},
 		))
 	})
 })

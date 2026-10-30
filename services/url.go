@@ -13,6 +13,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 )
 
 type URL struct {
@@ -51,7 +53,7 @@ func NewURL(cnf *config.ServiceURL, defaultPort uint32) *URL {
 	}
 }
 
-func (s *URL) Resolve() ([]IpAddr, error) {
+func (s *URL) Resolve() ([]*eds.Endpoint, error) {
 	req, err := http.NewRequest("GET", s.urlParse.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request: %w", err)
@@ -74,17 +76,17 @@ func (s *URL) Resolve() ([]IpAddr, error) {
 	}
 
 	scanner := bufio.NewScanner(resp.Body)
-	ips := make([]IpAddr, 0)
+	endpoints := make([]*eds.Endpoint, 0)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		ipAddr, err := urlToIpAddr(line, s.defaultPort)
+		endpoint, err := urlToEndpoint(line, s.defaultPort)
 		if err != nil {
 			return nil, err
 		}
-		ips = append(ips, ipAddr)
+		endpoints = append(endpoints, endpoint)
 	}
-	return ips, nil
+	return endpoints, nil
 }

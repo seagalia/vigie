@@ -4,15 +4,17 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"net/http"
+	"strings"
 
 	"github.com/seagalia/vigie/config"
 )
 
 // requireBasicAuth lets a request through when it carries the username and password of one of the users; /healthz
-// stays open so probes need no credentials
+// and the gRPC health service stay open, since probes, such as the grpc probe of Kubernetes, send no credentials
 func requireBasicAuth(users []config.BasicAuthUser, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" {
+		isHealthCheck := r.URL.Path == "/healthz" || strings.HasPrefix(r.URL.Path, "/grpc.health.v1.Health/")
+		if isHealthCheck {
 			next.ServeHTTP(w, r)
 			return
 		}

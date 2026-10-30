@@ -4,7 +4,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/seagalia/vigie/config"
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 	. "github.com/seagalia/vigie/services"
+	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +37,7 @@ var _ = Describe("Kubernetes", func() {
 			Endpoints:   endpoints,
 		}
 	}
-	resolve := func(portName string, objects ...runtime.Object) ([]IpAddr, error) {
+	resolve := func(portName string, objects ...runtime.Object) ([]*eds.Endpoint, error) {
 		client := fake.NewClientset(objects...)
 		cnf := &config.ServiceKubernetes{Namespace: "shop", Service: "web", PortName: portName}
 		return NewKubernetesWithClient(client, cnf, 8080).Resolve()
@@ -50,7 +52,7 @@ var _ = Describe("Kubernetes", func() {
 		))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}, {IP: "10.0.0.2", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}, {Ip: "10.0.0.2", Port: 80}}, protocmp.Transform()))
 	})
 
 	It("gives every address of an endpoint", func() {
@@ -59,7 +61,7 @@ var _ = Describe("Kubernetes", func() {
 		))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}, {IP: "10.0.0.4", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}, {Ip: "10.0.0.4", Port: 80}}, protocmp.Transform()))
 	})
 
 	It("reads every slice of the service, ipv4 and ipv6, and skips fqdn", func() {
@@ -70,7 +72,7 @@ var _ = Describe("Kubernetes", func() {
 		)
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(ConsistOf(IpAddr{IP: "10.0.0.1", Port: 80}, IpAddr{IP: "fd00::1", Port: 80}))
+		Expect(ips).To(ConsistOf(BeComparableTo(&eds.Endpoint{Ip: "10.0.0.1", Port: 80}, protocmp.Transform()), BeComparableTo(&eds.Endpoint{Ip: "fd00::1", Port: 80}, protocmp.Transform())))
 	})
 
 	It("ignores the slices of another service", func() {
@@ -80,7 +82,7 @@ var _ = Describe("Kubernetes", func() {
 		)
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}}, protocmp.Transform()))
 	})
 
 	It("picks the named port", func() {
@@ -89,14 +91,14 @@ var _ = Describe("Kubernetes", func() {
 		ips, err := resolve("http", webService, slice("web-1", "web", discoveryv1.AddressTypeIPv4, ports, endpoint(ptr.To(true), "10.0.0.1")))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}}, protocmp.Transform()))
 	})
 
 	It("takes the only port without a port name", func() {
 		ips, err := resolve("", webService, slice("web-1", "web", discoveryv1.AddressTypeIPv4, http, endpoint(ptr.To(true), "10.0.0.1")))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}}, protocmp.Transform()))
 	})
 
 	It("falls back to the default port with several ports and no port name", func() {
@@ -105,7 +107,7 @@ var _ = Describe("Kubernetes", func() {
 		ips, err := resolve("", webService, slice("web-1", "web", discoveryv1.AddressTypeIPv4, ports, endpoint(ptr.To(true), "10.0.0.1")))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 8080}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 8080}}, protocmp.Transform()))
 	})
 
 	It("falls back to the default port when the port has no name and no number", func() {
@@ -114,7 +116,7 @@ var _ = Describe("Kubernetes", func() {
 		ips, err := resolve("", webService, slice("web-1", "web", discoveryv1.AddressTypeIPv4, ports, endpoint(ptr.To(true), "10.0.0.1")))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 8080}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 8080}}, protocmp.Transform()))
 	})
 
 	It("fails on a port name the slice doesn't have", func() {

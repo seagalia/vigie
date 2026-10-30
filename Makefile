@@ -3,7 +3,7 @@ GINKGO = go tool ginkgo
 # the release binary is built without cgo, so nothing else relies on it either
 export CGO_ENABLED = 0
 
-.PHONY: build test test-linux test-e2e lint docker
+.PHONY: build test test-linux test-e2e lint docker generate api-lint
 
 build:
 	go build -o vigie .
@@ -38,3 +38,12 @@ lint:
 # the vigie image
 docker:
 	docker build --build-arg VERSION=$$(git describe --tags --always) --build-arg COMMIT=$$(git rev-parse HEAD) --build-arg DATE=$$(date -u +%Y-%m-%dT%H:%M:%SZ) -t vigie:dev .
+
+# regenerate the go code of the protos in api/.
+# outputs are removed first, so a deleted proto leaves nothing behind.
+generate:
+	rm -rf sdk/vigie
+	cd api && buf generate
+
+api-lint:
+	cd api && buf lint

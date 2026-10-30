@@ -12,8 +12,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/seagalia/vigie/config"
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 	. "github.com/seagalia/vigie/services"
 	"go.yaml.in/yaml/v2"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 var _ = Describe("Services", func() {
@@ -29,11 +31,11 @@ var _ = Describe("Services", func() {
 		ips, err := NewFile(&config.ServiceFile{Path: path}, 80).Resolve()
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{
-			{IP: "10.0.0.1", Port: 80},
-			{IP: "10.0.0.2", Port: 8080, LoadBalancingWeight: 5},
-			{IP: "10.0.0.3", Port: 9090},
-		}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{
+			{Ip: "10.0.0.1", Port: 80},
+			{Ip: "10.0.0.2", Port: 8080, LoadBalancingWeight: 5},
+			{Ip: "10.0.0.3", Port: 9090},
+		}, protocmp.Transform()))
 	})
 
 	It("should refuse an invalid weight", func() {
@@ -57,7 +59,7 @@ var _ = Describe("Services", func() {
 		ips, err := NewURL(urlConf, 80).Resolve()
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 81}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 81}}, protocmp.Transform()))
 	})
 
 	It("should give the error of the url", func() {
@@ -96,6 +98,31 @@ var _ = Describe("Services", func() {
 			var ips []map[string]any
 			Expect(json.Unmarshal(resp.Body.Bytes(), &ips)).To(Succeed())
 			Expect(ips).To(Equal([]map[string]any{{"ip": "10.0.0.1", "port": float64(80), "load_balancing_weight": float64(0)}}))
+		})
+
+		It("should write the exact json of the endpoints, a weight of 0 included", func() {
+			var err error
+			handler, err = NewHandler([]*config.Service{
+				{Name: "web", DefaultPort: 80, File: &config.ServiceFile{Path: writeEndpoints("10.0.0.1:8080\n10.0.0.2:8081#5\n")}},
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			resp := get("?service_name=web")
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Header().Get("Content-Type")).To(Equal("application/json"))
+			Expect(resp.Body.String()).To(Equal("[\n  {\n    \"ip\": \"10.0.0.1\",\n    \"port\": 8080,\n    \"load_balancing_weight\": 0\n  },\n" +
+				"  {\n    \"ip\": \"10.0.0.2\",\n    \"port\": 8081,\n    \"load_balancing_weight\": 5\n  }\n]\n"))
+		})
+
+		It("should write an empty list as []", func() {
+			var err error
+			handler, err = NewHandler([]*config.Service{
+				{Name: "web", DefaultPort: 80, File: &config.ServiceFile{Path: writeEndpoints("")}},
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(get("?service_name=web").Body.String()).To(Equal("[]\n"))
 		})
 
 		It("should use the url when a service sets an url and a file", func() {

@@ -6,31 +6,27 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 )
 
-type IpAddr struct {
-	IP                  string `json:"ip"`
-	Port                uint32 `json:"port"`
-	LoadBalancingWeight uint32 `json:"load_balancing_weight"`
-}
-
 type Service interface {
-	Resolve() ([]IpAddr, error)
+	Resolve() ([]*eds.Endpoint, error)
 }
 
-func urlToIpAddr(line string, defaultPort uint32) (IpAddr, error) {
+func urlToEndpoint(line string, defaultPort uint32) (*eds.Endpoint, error) {
 	if !strings.Contains(line, "://") {
 		line = "any://" + line
 	}
 	u, err := url.Parse(line)
 	if err != nil {
-		return IpAddr{}, fmt.Errorf("invalid url: %w", err)
+		return nil, fmt.Errorf("invalid url: %w", err)
 	}
 	weight := 0
 	if u.Fragment != "" {
 		weight, err = strconv.Atoi(u.Fragment)
 		if err != nil {
-			return IpAddr{}, fmt.Errorf("invalid weight: %w", err)
+			return nil, fmt.Errorf("invalid weight: %w", err)
 		}
 	}
 	host, portRaw, err := net.SplitHostPort(u.Host)
@@ -41,12 +37,12 @@ func urlToIpAddr(line string, defaultPort uint32) (IpAddr, error) {
 	if portRaw != "" {
 		port, err = strconv.ParseUint(portRaw, 10, 32)
 		if err != nil {
-			return IpAddr{}, fmt.Errorf("invalid port: %w", err)
+			return nil, fmt.Errorf("invalid port: %w", err)
 		}
 	}
 
-	return IpAddr{
-		IP:                  host,
+	return &eds.Endpoint{
+		Ip:                  host,
 		Port:                uint32(port),
 		LoadBalancingWeight: uint32(weight),
 	}, nil

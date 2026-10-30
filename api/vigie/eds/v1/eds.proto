@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package vigie.eds.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/seagalia/vigie/sdk/vigie/eds/v1;eds";
+
+// Endpoint is one address and port of a service, with its weight. As JSON, its fields are the keys of each object of
+// the `GET /services` answer.
+message Endpoint {
+  // IPv4 or IPv6 address. Vigie doesn't resolve host names, so a source that gives a host name passes it on as is, and
+  // a client checking this rule refuses it.
+  string ip = 1 [(buf.validate.field).string.ip = true];
+  // Port of the endpoint, the `default_port` of the service when its source gives none.
+  uint32 port = 2 [(buf.validate.field).uint32.gt = 0];
+  // Weight of the endpoint for weighted load balancing policies. 0 when its source gives none, which gives the
+  // endpoint the default weight of the client.
+  uint32 load_balancing_weight = 3;
+}
+
+// GetEndpointsRequest names the service to get the endpoints of.
+message GetEndpointsRequest {
+  // Name of a service of the configuration of Vigie. Empty means the service named `default`.
+  string service_name = 1;
+}
+
+// GetEndpointsResponse holds the endpoints of a service.
+message GetEndpointsResponse {
+  // The endpoints the source of the service gives right now, possibly none.
+  repeated Endpoint endpoints = 1;
+}
+
+// EndpointDiscoveryService gives the endpoints of the services Vigie is configured with. It answers the same endpoints
+// as `GET /services`, on the same port and behind the same basic authentication.
+service EndpointDiscoveryService {
+  // GetEndpoints returns the endpoints of a service, from the cache of its source when it's still fresh. It answers
+  // `NotFound` for a service Vigie doesn't know, and `Unavailable` when the source of the service fails.
+  rpc GetEndpoints(GetEndpointsRequest) returns (GetEndpointsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}

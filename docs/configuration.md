@@ -41,7 +41,7 @@ services:
 | `server.listen_addr` | string | no | `:8080` | Address the server listens on. |
 | `server.tls.cert_file` | path | with `server.tls` | none | Certificate of the server, in PEM. |
 | `server.tls.key_file` | path | with `server.tls` | none | Private key of the certificate, in PEM. |
-| `server.basic_auth` | list | no | empty | Users allowed to call the server, each with a `username` and a `password`. When set, every endpoint but `GET /healthz` asks for one of them. |
+| `server.basic_auth` | list | no | empty | Users allowed to call the server, each with a `username` and a `password`. When set, every endpoint but `GET /healthz` and the gRPC health service asks for one of them. |
 | `log.level` | string | no | `info` | `trace`, `debug`, `info`, `warn` (or `warning`), `error`, `fatal` or `panic`. |
 | `log.no_color` | boolean | no | `false` | Prints text without ANSI colours. |
 | `log.in_json` | boolean | no | `false` | Prints one JSON object per line instead of text. |
@@ -51,7 +51,7 @@ services:
 
 Without `server.tls`, the server speaks plain HTTP. With it, the server speaks HTTPS only.
 
-With `server.basic_auth`, a request without the username and password of one of the users gets `401` with `WWW-Authenticate: Basic realm="vigie"`, so a browser asks for them before showing the page. `GET /healthz` stays open for the probes. Basic authentication sends the password in clear on each request, so set `server.tls` too when the network isn't trusted.
+With `server.basic_auth`, a request without the username and password of one of the users gets `401` with `WWW-Authenticate: Basic realm="vigie"`, so a browser asks for them before showing the page. `GET /healthz` and the gRPC health service stay open for the probes. Basic authentication sends the password in clear on each request, so set `server.tls` too when the network isn't trusted.
 
 | Error | Cause |
 |---|---|

@@ -61,7 +61,7 @@ var _ = Describe("Kubernetes source", Label("e2e"), Ordered, func() {
 		code, ips := getServices(handler, "web")
 
 		Expect(code).To(Equal(200))
-		Expect(ips).To(Equal([]services.IpAddr{{IP: "10.0.0.1", Port: 80}}))
+		Expect(ips).To(Equal([]endpoint{{IP: "10.0.0.1", Port: 80}}))
 	})
 })
 

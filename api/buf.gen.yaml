@@ -1,0 +1,10 @@
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go:v1.36.12
+    out: ../sdk
+    opt:
+      - module=github.com/seagalia/vigie/sdk
+  - remote: buf.build/connectrpc/go:v2.0.1
+    out: ../sdk
+    opt:
+      - module=github.com/seagalia/vigie/sdk

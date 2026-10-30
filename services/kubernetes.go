@@ -14,6 +14,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 )
 
 type Kubernetes struct {
@@ -72,7 +74,7 @@ func expandHome(path string) (string, error) {
 	return filepath.Join(home, rest), nil
 }
 
-func (s *Kubernetes) Resolve() ([]IpAddr, error) {
+func (s *Kubernetes) Resolve() ([]*eds.Endpoint, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
 	ns, name := s.cnf.Namespace, s.cnf.Service
@@ -89,7 +91,7 @@ func (s *Kubernetes) Resolve() ([]IpAddr, error) {
 		return nil, fmt.Errorf("list endpointslices of service %s/%s: %w", ns, name, err)
 	}
 
-	ipAddrs := make([]IpAddr, 0)
+	endpoints := make([]*eds.Endpoint, 0)
 	for _, slice := range slices.Items {
 		// flock dials ips, a slice of host names gives it nothing to dial
 		if slice.AddressType == discoveryv1.AddressTypeFQDN {
@@ -105,10 +107,10 @@ func (s *Kubernetes) Resolve() ([]IpAddr, error) {
 			return nil, err
 		}
 		for _, address := range addresses {
-			ipAddrs = append(ipAddrs, IpAddr{IP: address, Port: port})
+			endpoints = append(endpoints, &eds.Endpoint{Ip: address, Port: port})
 		}
 	}
-	return ipAddrs, nil
+	return endpoints, nil
 }
 
 func readyAddresses(endpoints []discoveryv1.Endpoint) []string {

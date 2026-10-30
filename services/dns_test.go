@@ -8,7 +8,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/seagalia/vigie/config"
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
 	. "github.com/seagalia/vigie/services"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 // answerTestZone answers the few names the specs ask, and an empty answer for anything else
@@ -54,7 +56,7 @@ var _ = Describe("DNS with a resolver", func() {
 		ips, err := NewDNS(&config.ServiceDNS{Name: "web.test", Type: "IP", Resolver: addr}, 80).Resolve()
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}}, protocmp.Transform()))
 	})
 
 	It("should look up srv records and their targets through the resolver", func() {
@@ -63,14 +65,14 @@ var _ = Describe("DNS with a resolver", func() {
 		ips, err := NewDNS(cnf, 80).Resolve()
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.9", Port: 9000, LoadBalancingWeight: 3}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.9", Port: 9000, LoadBalancingWeight: 3}}, protocmp.Transform()))
 	})
 
 	It("should look up txt records through the resolver", func() {
 		ips, err := NewDNS(&config.ServiceDNS{Name: "eds.test", Type: "TXT", Resolver: addr}, 80).Resolve()
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.2", Port: 81, LoadBalancingWeight: 4}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.2", Port: 81, LoadBalancingWeight: 4}}, protocmp.Transform()))
 	})
 
 	It("should fail without hanging when the resolver is unreachable", func() {

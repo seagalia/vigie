@@ -8,17 +8,19 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	eds "github.com/seagalia/vigie/sdk/vigie/eds/v1"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 // countingSource answers its ips, or its error, and counts how often it is asked
 type countingSource struct {
 	calls atomic.Int32
-	ips   []IpAddr
+	ips   []*eds.Endpoint
 	err   error
 	delay time.Duration
 }
 
-func (s *countingSource) Resolve() ([]IpAddr, error) {
+func (s *countingSource) Resolve() ([]*eds.Endpoint, error) {
 	s.calls.Add(1)
 	time.Sleep(s.delay)
 	return s.ips, s.err
@@ -32,7 +34,7 @@ var _ = Describe("Cache", func() {
 	)
 
 	BeforeEach(func() {
-		source = &countingSource{ips: []IpAddr{{IP: "10.0.0.1", Port: 80}}}
+		source = &countingSource{ips: []*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}}}
 		now = time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
 		cache = NewCache(source, 5*time.Second)
 		cache.now = func() time.Time { return now }
@@ -45,7 +47,7 @@ var _ = Describe("Cache", func() {
 		ips, err := cache.Resolve()
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ips).To(Equal([]IpAddr{{IP: "10.0.0.1", Port: 80}}))
+		Expect(ips).To(BeComparableTo([]*eds.Endpoint{{Ip: "10.0.0.1", Port: 80}}, protocmp.Transform()))
 		Expect(source.calls.Load()).To(Equal(int32(1)))
 	})
 
